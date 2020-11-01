@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,8 +12,12 @@ namespace WizzifyWeb.Models
 {
     public class Account : IEnumerable<Account>
     {
+        [Remote(action: "VerifyUsername", controller: "Accounts")]
         public string username { get; set; }
+        [Remote(action: "VerifyPassword", controller: "Accounts")]
         public string password { get; set; }
+        [EmailAddress]
+        [Remote(action: "VerifyEmail", controller: "Accounts")]
         public string emailAddress { get; set; }
         public string firstName { get; set; }
         public string lastName { get; set; }
@@ -35,7 +40,7 @@ namespace WizzifyWeb.Models
             {
                 // Attempt validation.
                 strVal.Validate(username);
-                this.username = username;
+                //this.username = username;
                 return true;
             }
             catch (ArgumentException exception)
@@ -52,7 +57,7 @@ namespace WizzifyWeb.Models
             {
                 // Attempt validation.
                 strVal.Validate(password);
-                this.password = password;
+                //this.password = password;
                 return true;
             }
             catch (ArgumentException exception)
@@ -65,7 +70,7 @@ namespace WizzifyWeb.Models
         public Boolean EmailAddress(string emailAddress)
         {
             if (new EmailAddressAttribute().IsValid(emailAddress)) {
-                this.emailAddress = emailAddress;
+                //this.emailAddress = emailAddress;
                 return true;
             }
 

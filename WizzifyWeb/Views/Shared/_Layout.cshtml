@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - WizzifyWeb</title>
+    <title>@ViewData["username"] - WizzifyWeb</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
@@ -22,7 +22,14 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Accounts" asp-action="LogIn">Sign In</a>
+                            @if (string.IsNullOrWhiteSpace((string)ViewData["username"])){
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Accounts" asp-action="LogIn">Sign In</a>
+
+                            }
+                            else
+                            {
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Accounts" asp-action="Details" asp-route-username="@ViewData["username"]">Account</a>
+                            }
                         </li>
                     </ul>
                 </div>

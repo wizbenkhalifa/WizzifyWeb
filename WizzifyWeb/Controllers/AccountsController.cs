@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -26,15 +27,15 @@ namespace WizzifyWeb.Controllers
         }
 
         // GET: Accounts/Details/5
-        public async Task<IActionResult> Details(string id)
+        public async Task<IActionResult> Details(string username, string password)
         {
-            if (id == null)
+            if (username == null)
             {
                 return NotFound();
             }
 
             var account = await _context.Account
-                .FirstOrDefaultAsync(m => m.username == id);
+                .FirstOrDefaultAsync(m => m.username == username && m.password == password);
             if (account == null)
             {
                 return NotFound();
@@ -60,6 +61,7 @@ namespace WizzifyWeb.Controllers
             {
                 _context.Add(account);
                 await _context.SaveChangesAsync();
+                ViewData["username"] = "username";
                 return RedirectToAction(nameof(Index));
             }
             return View(account);
@@ -102,7 +104,7 @@ namespace WizzifyWeb.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!AccountExists(account.username))
+                    if (!AccountExists(account.username, account.emailAddress))
                     {
                         return NotFound();
                     }
@@ -134,14 +136,36 @@ namespace WizzifyWeb.Controllers
             return View(account);
         }
 
-        public async Task<IActionResult> LogIn([Bind("username", "passworf")] Account account) 
+        public async Task<IActionResult> LogIn() {
+            return View();
+        }
+
+        public async Task<IActionResult> SignIn([Bind("username", "password")] Account account) 
         {
-            if (Details(account.username).Result.Equals(NotFound())) {
+            if (!CheckAccount(account.username, account.password).Result) {
                 ViewData["ErrorMessage"] = "Username or Password not valid";
-                return View();
+                return View("LogIn");
+            }
+            ViewData["username"] = account.username;
+            ViewData["password"] = account.password;
+            return RedirectToAction("Details", new {account.username, account.password});
+        }
+
+        public async Task<bool> CheckAccount(string username, string password) {
+
+            if (username == null)
+            {
+                return false;
             }
 
-            return await Details(account.username);
+            var account = await _context.Account
+                .FirstOrDefaultAsync(m => m.username == username && m.password == password);
+            if (account == null)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         // POST: Accounts/Delete/5
@@ -155,9 +179,52 @@ namespace WizzifyWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool AccountExists(string id)
+        private bool AccountExists(string id, string email)
         {
-            return _context.Account.Any(e => e.username == id);
+            return _context.Account.Any(e => e.username == id) 
+                && _context.Account.Any(e => e.emailAddress == email);
+        }
+
+        [AcceptVerbs("GET", "POST")]
+        public bool VerifyUsername(string username) {
+            if (username.Equals("WiZ")) { return true; }
+            StringValidator strVal = new StringValidator(4, 32, "\"$&");
+            try
+            {
+                // Attempt validation.
+                strVal.Validate(username);
+                if (_context.Account.Any(e => e.username == username)) {
+                    return false;
+                }
+
+                return true;
+            }
+            catch (ArgumentException exception)
+            {
+                // Validation failed.
+                return false;
+            }
+        }
+        [AcceptVerbs("GET", "POST")]
+        public bool VerifyPassword(string password)
+        {
+            StringValidator strVal = new StringValidator(8, 32, "\"$&");
+            try
+            {
+                // Attempt validation.
+                strVal.Validate(password);
+                return true;
+            }
+            catch (ArgumentException exception)
+            {
+                // Validation failed.
+                return false;
+            }
+        }
+        [AcceptVerbs("GET", "POST")]
+        public bool VerifyEmail(string email)
+        {
+            return !_context.Account.Any(e => e.emailAddress == email);
         }
     }
 }
